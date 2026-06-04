@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Camera, RefreshCw, AlertCircle, Sparkles, Keyboard } from 'lucide-react';
+import { Camera, AlertCircle, Keyboard } from 'lucide-react';
 import { Booking } from '../utils/mockData';
 
 interface QrScannerProps {
   activeBookings: Booking[];
   onScanSuccess: (data: string) => void;
   onScanError?: (error: string) => void;
+  expectedType: 'checkin' | 'checkout';
 }
 
-export default function QrScanner({ activeBookings, onScanSuccess, onScanError }: QrScannerProps) {
+export default function QrScanner({ activeBookings, onScanSuccess, onScanError, expectedType }: QrScannerProps) {
   const [useCamera, setUseCamera] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState('');
@@ -33,7 +34,7 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
       return;
     }
 
-    // Dynamic import to prevent SSR issues with browser APIs
+    // Dynamic import to prevent SSR issues
     import('html5-qrcode').then(({ Html5QrcodeScanner }) => {
       try {
         setCameraError(null);
@@ -53,7 +54,6 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
         scanner.render(
           (decodedText) => {
             onScanSuccess(decodedText);
-            // Vibrate if supported
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
               navigator.vibrate(200);
             }
@@ -87,7 +87,11 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (manualCode.trim()) {
-      onScanSuccess(manualCode.trim());
+      // Prepend prefix if not present for manual testing
+      const code = manualCode.trim();
+      const prefix = expectedType === 'checkin' ? 'CHECKIN_' : 'CHECKOUT_';
+      const formatted = code.startsWith('CHECKIN_') || code.startsWith('CHECKOUT_') ? code : `${prefix}${code}`;
+      onScanSuccess(formatted);
       setManualCode('');
     }
   };
@@ -100,8 +104,8 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
           onClick={() => setUseCamera(false)}
           style={{
             ...styles.tabBtn,
-            borderBottom: !useCamera ? '2px solid var(--accent-purple)' : 'none',
-            color: !useCamera ? '#fff' : 'var(--text-secondary)',
+            borderBottom: !useCamera ? '2px solid var(--color-vacant)' : 'none',
+            color: !useCamera ? 'var(--text-primary)' : 'var(--text-secondary)',
           }}
         >
           <Keyboard size={16} style={{ marginRight: '6px' }} />
@@ -112,8 +116,8 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
           onClick={() => setUseCamera(true)}
           style={{
             ...styles.tabBtn,
-            borderBottom: useCamera ? '2px solid var(--accent-purple)' : 'none',
-            color: useCamera ? '#fff' : 'var(--text-secondary)',
+            borderBottom: useCamera ? '2px solid var(--color-vacant)' : 'none',
+            color: useCamera ? 'var(--text-primary)' : 'var(--text-secondary)',
           }}
         >
           <Camera size={16} style={{ marginRight: '6px' }} />
@@ -124,54 +128,56 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
       {!useCamera ? (
         <div style={styles.simulatorBody} className="animate-fade-in">
           <p style={styles.infoText}>
-            For seamless demo pitching, click any pending reservation code below to simulate a physical QR scan instantly:
+            Click a simulation target below to feed a physical QR code scanner stream:
           </p>
 
-          <div style={styles.simSection}>
-            <h4 style={{ ...styles.sectionTitle, color: 'var(--color-reserved)' }}>
-              🟢 Check-In QR Simulation Targets (Paid bookings)
-            </h4>
-            {checkinSimTargets.length === 0 ? (
-              <div style={styles.emptySim}>No paid guests waiting to check in.</div>
-            ) : (
-              <div style={styles.simGrid}>
-                {checkinSimTargets.map((b) => (
-                  <button
-                    id={`sim-checkin-${b.id}`}
-                    key={b.id}
-                    onClick={() => onScanSuccess(b.id)}
-                    style={styles.simCard}
-                  >
-                    <div style={{ fontWeight: 'bold' }}>{b.guestName}</div>
-                    <div style={styles.simDetails}>Room {b.roomId} • Code: {b.id}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={styles.simSection}>
-            <h4 style={{ ...styles.sectionTitle, color: 'var(--color-occupied)' }}>
-              🔴 Check-Out QR Simulation Targets (Occupied rooms)
-            </h4>
-            {checkoutSimTargets.length === 0 ? (
-              <div style={styles.emptySim}>No active checked-in guests.</div>
-            ) : (
-              <div style={styles.simGrid}>
-                {checkoutSimTargets.map((b) => (
-                  <button
-                    id={`sim-checkout-${b.id}`}
-                    key={b.id}
-                    onClick={() => onScanSuccess(b.id)}
-                    style={styles.simCard}
-                  >
-                    <div style={{ fontWeight: 'bold' }}>{b.guestName}</div>
-                    <div style={styles.simDetails}>Room {b.roomId} • Code: {b.id}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {expectedType === 'checkin' ? (
+            <div style={styles.simSection}>
+              <h4 style={{ ...styles.sectionTitle, color: 'var(--color-reserved)' }}>
+                🟢 Check-In QR Simulation Targets
+              </h4>
+              {checkinSimTargets.length === 0 ? (
+                <div style={styles.emptySim}>No paid guests waiting to check in.</div>
+              ) : (
+                <div style={styles.simGrid}>
+                  {checkinSimTargets.map((b) => (
+                    <button
+                      id={`sim-checkin-${b.id}`}
+                      key={b.id}
+                      onClick={() => onScanSuccess(`CHECKIN_${b.id}`)}
+                      style={styles.simCard}
+                    >
+                      <div style={{ fontWeight: 'bold' }}>{b.guestName}</div>
+                      <div style={styles.simDetails}>Room {b.roomId} • Code: {b.id}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={styles.simSection}>
+              <h4 style={{ ...styles.sectionTitle, color: 'var(--color-occupied)' }}>
+                🔴 Check-Out QR Simulation Targets
+              </h4>
+              {checkoutSimTargets.length === 0 ? (
+                <div style={styles.emptySim}>No active checked-in guests.</div>
+              ) : (
+                <div style={styles.simGrid}>
+                  {checkoutSimTargets.map((b) => (
+                    <button
+                      id={`sim-checkout-${b.id}`}
+                      key={b.id}
+                      onClick={() => onScanSuccess(`CHECKOUT_${b.id}`)}
+                      style={styles.simCard}
+                    >
+                      <div style={{ fontWeight: 'bold' }}>{b.guestName}</div>
+                      <div style={styles.simDetails}>Room {b.roomId} • Code: {b.id}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleManualSubmit} style={styles.manualForm}>
             <input
@@ -179,11 +185,11 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
               type="text"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
-              placeholder="Or enter Booking ID manually (e.g. B-102-X8A2)"
+              placeholder={expectedType === 'checkin' ? "Booking ID (e.g. B-102-X8A2)" : "Booking ID (e.g. B-102-X8A2)"}
               style={styles.manualInput}
             />
             <button id="btn-manual-scan" type="submit" style={styles.manualBtn}>
-              Inject Code
+              Inject
             </button>
           </form>
         </div>
@@ -198,8 +204,6 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
 
           <div style={styles.cameraFrame}>
             <div id="qr-reader-container" style={styles.scannerContainer}></div>
-            
-            {/* High-tech overlay HUD indicators */}
             <div style={styles.hudCornerTopLeft}></div>
             <div style={styles.hudCornerTopRight}></div>
             <div style={styles.hudCornerBottomLeft}></div>
@@ -208,7 +212,7 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError }
           </div>
 
           <p style={styles.cameraInstructions}>
-            Hold the Guest QR code generated on their phone viewport up to this camera.
+            Hold the Guest {expectedType === 'checkin' ? 'Check-In' : 'Check-Out'} QR code up to this camera.
           </p>
         </div>
       )}
@@ -232,8 +236,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px',
     background: 'none',
     border: 'none',
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: '13px',
+    fontWeight: '700',
     cursor: 'pointer',
     display: 'flex',
     justifyContent: 'center',
@@ -246,7 +250,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '16px',
   },
   infoText: {
-    fontSize: '13px',
+    fontSize: '12px',
     color: 'var(--text-secondary)',
     lineHeight: '1.5',
   },
@@ -256,16 +260,16 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '8px',
   },
   sectionTitle: {
-    fontSize: '12px',
-    fontWeight: '700',
+    fontSize: '11px',
+    fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
   emptySim: {
     padding: '12px',
-    background: 'rgba(255,255,255,0.02)',
+    background: 'var(--bg-primary)',
     border: '1px dashed var(--border-color)',
-    borderRadius: '8px',
+    borderRadius: '10px',
     color: 'var(--text-muted)',
     fontSize: '12px',
     textAlign: 'center',
@@ -276,11 +280,11 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '8px',
   },
   simCard: {
-    padding: '10px 12px',
-    background: 'var(--bg-tertiary)',
+    padding: '12px',
+    background: 'var(--bg-primary)',
     border: '1px solid var(--border-color)',
-    borderRadius: '8px',
-    color: '#fff',
+    borderRadius: '10px',
+    color: 'var(--text-primary)',
     cursor: 'pointer',
     textAlign: 'left',
     fontSize: '12px',
@@ -288,7 +292,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
   },
   simDetails: {
     color: 'var(--text-secondary)',
@@ -302,16 +306,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
   manualInput: {
     flex: 1,
-    background: 'rgba(255,255,255,0.03)',
+    background: 'var(--bg-primary)',
     border: '1px solid var(--border-color)',
     borderRadius: '8px',
     padding: '10px 12px',
-    color: '#fff',
+    color: 'var(--text-primary)',
     fontSize: '13px',
     outline: 'none',
   },
   manualBtn: {
-    background: 'var(--accent-purple)',
+    background: 'var(--color-vacant)',
     color: '#fff',
     border: 'none',
     borderRadius: '8px',
@@ -329,7 +333,7 @@ const styles: Record<string, React.CSSProperties> = {
   errorBox: {
     width: '100%',
     padding: '12px',
-    background: 'rgba(239, 68, 68, 0.1)',
+    background: 'var(--color-occupied-glow)',
     border: '1px solid rgba(239, 68, 68, 0.2)',
     borderRadius: '8px',
     color: 'var(--color-occupied)',
@@ -343,7 +347,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '280px',
     borderRadius: '16px',
     overflow: 'hidden',
-    border: '2px solid rgba(255,255,255,0.1)',
+    border: '2px solid var(--border-color)',
     background: '#000',
   },
   scannerContainer: {
@@ -362,8 +366,8 @@ const styles: Record<string, React.CSSProperties> = {
     left: '12px',
     width: '16px',
     height: '16px',
-    borderLeft: '3px solid var(--accent-purple)',
-    borderTop: '3px solid var(--accent-purple)',
+    borderLeft: '3px solid var(--color-vacant)',
+    borderTop: '3px solid var(--color-vacant)',
     zIndex: 10,
   },
   hudCornerTopRight: {
@@ -372,8 +376,8 @@ const styles: Record<string, React.CSSProperties> = {
     right: '12px',
     width: '16px',
     height: '16px',
-    borderRight: '3px solid var(--accent-purple)',
-    borderTop: '3px solid var(--accent-purple)',
+    borderRight: '3px solid var(--color-vacant)',
+    borderTop: '3px solid var(--color-vacant)',
     zIndex: 10,
   },
   hudCornerBottomLeft: {
@@ -382,8 +386,8 @@ const styles: Record<string, React.CSSProperties> = {
     left: '12px',
     width: '16px',
     height: '16px',
-    borderLeft: '3px solid var(--accent-purple)',
-    borderBottom: '3px solid var(--accent-purple)',
+    borderLeft: '3px solid var(--color-vacant)',
+    borderBottom: '3px solid var(--color-vacant)',
     zIndex: 10,
   },
   hudCornerBottomRight: {
@@ -392,8 +396,8 @@ const styles: Record<string, React.CSSProperties> = {
     right: '12px',
     width: '16px',
     height: '16px',
-    borderRight: '3px solid var(--accent-purple)',
-    borderBottom: '3px solid var(--accent-purple)',
+    borderRight: '3px solid var(--color-vacant)',
+    borderBottom: '3px solid var(--color-vacant)',
     zIndex: 10,
   },
   hudScanLine: {
@@ -402,8 +406,8 @@ const styles: Record<string, React.CSSProperties> = {
     left: '10%',
     width: '80%',
     height: '2px',
-    background: 'linear-gradient(to right, transparent, var(--accent-purple), transparent)',
-    boxShadow: '0 0 8px var(--accent-purple)',
+    background: 'linear-gradient(to right, transparent, var(--color-vacant), transparent)',
+    boxShadow: '0 0 8px var(--color-vacant)',
     animation: 'scan 2s linear infinite',
     zIndex: 10,
   },

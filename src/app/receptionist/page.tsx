@@ -11,6 +11,7 @@ export default function ReceptionistPage() {
   const { rooms, bookings, logs, checkInGuest, checkOutGuest } = useHotelState();
   const [scanSuccess, setScanSuccess] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [scannerMode, setScannerMode] = useState<'checkin' | 'checkout'>('checkin');
 
   // Auto-clear feedback messages after 5 seconds
   useEffect(() => {
@@ -24,25 +25,51 @@ export default function ReceptionistPage() {
   }, [scanSuccess, scanError]);
 
   const handleScanSuccess = (decodedText: string) => {
-    const booking = bookings.find((b) => b.id === decodedText);
+    const prefix = scannerMode === 'checkin' ? 'CHECKIN_' : 'CHECKOUT_';
+    
+    if (!decodedText.startsWith(prefix)) {
+      setScanError(
+        `Scan Refused: Invalid QR code. This is the ${
+          scannerMode === 'checkin' ? 'Check-In' : 'Check-Out'
+        } scanner. Please scan a ${scannerMode === 'checkin' ? 'Check-In' : 'Check-Out'} QR code.`
+      );
+      setScanSuccess(null);
+      return;
+    }
+
+    const bookingId = decodedText.substring(prefix.length);
+    const booking = bookings.find((b) => b.id === bookingId);
     if (!booking) {
-      setScanError(`Scan Refused: Booking code "${decodedText}" does not exist in ledger.`);
+      setScanError(`Scan Refused: Booking code "${bookingId}" does not exist in ledger.`);
       setScanSuccess(null);
       return;
     }
 
     try {
-      if (booking.status === 'paid') {
-        checkInGuest(decodedText);
-        setScanSuccess(`Check-In Approved: Room ${booking.roomId} assigned to ${booking.guestName}.`);
-        setScanError(null);
-      } else if (booking.status === 'checked_in') {
-        checkOutGuest(decodedText);
-        setScanSuccess(`Check-Out Approved: Room ${booking.roomId} released. Guest ${booking.guestName} departed.`);
-        setScanError(null);
-      } else if (booking.status === 'checked_out') {
-        setScanError(`Scan Rejected: Guest ${booking.guestName} already checked out of Room ${booking.roomId}.`);
-        setScanSuccess(null);
+      if (scannerMode === 'checkin') {
+        if (booking.status === 'paid') {
+          checkInGuest(bookingId);
+          setScanSuccess(`Check-In Approved: Room ${booking.roomId} assigned to ${booking.guestName}.`);
+          setScanError(null);
+        } else if (booking.status === 'checked_in') {
+          setScanError(`Scan Rejected: Guest ${booking.guestName} is already checked in to Room ${booking.roomId}.`);
+          setScanSuccess(null);
+        } else {
+          setScanError(`Scan Rejected: Booking status is ${booking.status}. Expected "paid".`);
+          setScanSuccess(null);
+        }
+      } else {
+        if (booking.status === 'checked_in') {
+          checkOutGuest(bookingId);
+          setScanSuccess(`Check-Out Approved: Room ${booking.roomId} released. Guest ${booking.guestName} departed.`);
+          setScanError(null);
+        } else if (booking.status === 'checked_out') {
+          setScanError(`Scan Rejected: Guest ${booking.guestName} has already checked out of Room ${booking.roomId}.`);
+          setScanSuccess(null);
+        } else {
+          setScanError(`Scan Rejected: Guest is not checked in (status: ${booking.status}).`);
+          setScanSuccess(null);
+        }
       }
     } catch (err: any) {
       setScanError(`Operational Fail: ${err.message || 'Database error'}`);
@@ -81,8 +108,34 @@ export default function ReceptionistPage() {
         {/* Left Side: Scan controls */}
         <div className={`glass ${styles.panel}`}>
           <h3 className={styles.panelTitle}>
-            <ShieldCheck size={18} color="var(--color-vacant)" /> Scanner Console
+            <ShieldCheck size={18} color={scannerMode === 'checkin' ? 'var(--color-vacant)' : 'var(--color-occupied)'} /> Scanner Console
           </h3>
+
+          {/* Scanner Mode Selector Tabs */}
+          <div className={styles.scannerModeTabs}>
+            <button
+              id="btn-scanner-mode-checkin"
+              onClick={() => {
+                setScannerMode('checkin');
+                setScanSuccess(null);
+                setScanError(null);
+              }}
+              className={`${styles.modeTab} ${scannerMode === 'checkin' ? styles.modeTabActiveCheckin : ''}`}
+            >
+              Check-In Scanner
+            </button>
+            <button
+              id="btn-scanner-mode-checkout"
+              onClick={() => {
+                setScannerMode('checkout');
+                setScanSuccess(null);
+                setScanError(null);
+              }}
+              className={`${styles.modeTab} ${scannerMode === 'checkout' ? styles.modeTabActiveCheckout : ''}`}
+            >
+              Check-Out Scanner
+            </button>
+          </div>
 
           {scanSuccess && (
             <div className={styles.scanSuccess} id="scan-feedback-success">
@@ -103,6 +156,7 @@ export default function ReceptionistPage() {
             activeBookings={bookings}
             onScanSuccess={handleScanSuccess}
             onScanError={(err) => console.log('Scanning...', err)}
+            expectedType={scannerMode}
           />
         </div>
 

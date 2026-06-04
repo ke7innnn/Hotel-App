@@ -204,7 +204,7 @@ export default function GuestPage() {
                       Show to receptionist on desk. Payment validated.
                     </p>
                     <div className={styles.qrContainer} id="qr-checkin-pass">
-                      <QRCodeSVG value={activeBookingId || ''} size={170} bgColor="#ffffff" fgColor="#121c17" includeMargin={true} />
+                      <QRCodeSVG value={activeBookingId ? `CHECKIN_${activeBookingId}` : ''} size={170} bgColor="#ffffff" fgColor="#121c17" includeMargin={true} />
                     </div>
                     <div className={styles.badgeCard} style={{ marginTop: '14px' }}>
                       Waiting for Desk Scan
@@ -219,7 +219,7 @@ export default function GuestPage() {
                       Show to receptionist when leaving. Releases room status.
                     </p>
                     <div className={styles.qrContainer} id="qr-checkout-pass">
-                      <QRCodeSVG value={activeBookingId || ''} size={170} bgColor="#ffffff" fgColor="#d90429" includeMargin={true} />
+                      <QRCodeSVG value={activeBookingId ? `CHECKOUT_${activeBookingId}` : ''} size={170} bgColor="#ffffff" fgColor="#d90429" includeMargin={true} />
                     </div>
 
                     {/* Stay Timer */}

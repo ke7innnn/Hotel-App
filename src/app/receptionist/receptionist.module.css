@@ -192,3 +192,44 @@
   color: var(--text-muted);
   font-weight: 500;
 }
+
+.scannerModeTabs {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.modeTab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modeTab:hover {
+  color: var(--text-primary);
+}
+
+.modeTabActiveCheckin {
+  background: var(--bg-secondary);
+  color: var(--color-vacant);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid rgba(45, 106, 79, 0.1);
+}
+
+.modeTabActiveCheckout {
+  background: var(--bg-secondary);
+  color: var(--color-occupied);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid rgba(217, 4, 41, 0.1);
+}
