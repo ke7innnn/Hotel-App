@@ -45,7 +45,7 @@ export function useHotelState() {
     setLogs(initialLogsList);
   }, []);
 
-  // Sync state across tabs
+  // Sync state across tabs robustly via polling and standard storage events
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === ROOMS_KEY && e.newValue) {
@@ -60,8 +60,30 @@ export function useHotelState() {
     };
 
     window.addEventListener('storage', handleStorageChange);
+
+    // Active polling fallback to ensure instant cross-tab updates without event delays
+    const pollInterval = setInterval(() => {
+      const storedRooms = localStorage.getItem(ROOMS_KEY);
+      const storedBookings = localStorage.getItem(BOOKINGS_KEY);
+      const storedLogs = localStorage.getItem(LOGS_KEY);
+
+      if (storedRooms) {
+        const parsed = JSON.parse(storedRooms);
+        setRooms((prev) => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+      }
+      if (storedBookings) {
+        const parsed = JSON.parse(storedBookings);
+        setBookings((prev) => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+      }
+      if (storedLogs) {
+        const parsed = JSON.parse(storedLogs);
+        setLogs((prev) => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+      }
+    }, 800);
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(pollInterval);
     };
   }, []);
 
@@ -108,15 +130,21 @@ export function useHotelState() {
     guestPhone: string,
     durationHours: number
   ): Booking => {
-    const room = rooms.find((r) => r.id === roomId);
+    const storedRooms = localStorage.getItem(ROOMS_KEY);
+    const storedBookings = localStorage.getItem(BOOKINGS_KEY);
+    const storedLogs = localStorage.getItem(LOGS_KEY);
+
+    const currentRooms: Room[] = storedRooms ? JSON.parse(storedRooms) : rooms;
+    const currentBookings: Booking[] = storedBookings ? JSON.parse(storedBookings) : bookings;
+    const currentLogs: AuditLog[] = storedLogs ? JSON.parse(storedLogs) : logs;
+
+    const room = currentRooms.find((r) => r.id === roomId);
     if (!room || room.status !== 'vacant') {
       throw new Error('Room is not available for booking.');
     }
 
     const bookingId = `B-${roomId}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     const now = new Date();
-    
-    // Scheduled check-out is calculated from when they check-in, but we save duration logic or preset checkout from booking time
     const scheduledCheckOut = new Date(now.getTime() + durationHours * 60 * 60 * 1000).toISOString();
 
     const newBooking: Booking = {
@@ -132,7 +160,7 @@ export function useHotelState() {
       scheduledCheckOut,
     };
 
-    const updatedRooms = rooms.map((r) =>
+    const updatedRooms = currentRooms.map((r) =>
       r.id === roomId
         ? {
             ...r,
@@ -145,11 +173,10 @@ export function useHotelState() {
         : r
     );
 
-    const updatedBookings = [...bookings, newBooking];
+    const updatedBookings = [...currentBookings, newBooking];
     
-    // 2 logs: Payment and Booking
     let updatedLogs = addLog(
-      logs,
+      currentLogs,
       'PAYMENT',
       'GUEST',
       `Guest ${guestName} paid ₹${room.price.toLocaleString('en-IN')} for Room ${roomId}.`,
@@ -169,7 +196,15 @@ export function useHotelState() {
 
   // 2. Receptionist Checks In Guest
   const checkInGuest = (bookingId: string) => {
-    const booking = bookings.find((b) => b.id === bookingId);
+    const storedRooms = localStorage.getItem(ROOMS_KEY);
+    const storedBookings = localStorage.getItem(BOOKINGS_KEY);
+    const storedLogs = localStorage.getItem(LOGS_KEY);
+
+    const currentRooms: Room[] = storedRooms ? JSON.parse(storedRooms) : rooms;
+    const currentBookings: Booking[] = storedBookings ? JSON.parse(storedBookings) : bookings;
+    const currentLogs: AuditLog[] = storedLogs ? JSON.parse(storedLogs) : logs;
+
+    const booking = currentBookings.find((b) => b.id === bookingId);
     if (!booking) {
       throw new Error('Invalid QR code: Booking not found.');
     }
@@ -180,12 +215,12 @@ export function useHotelState() {
     const now = new Date().toISOString();
     
     // Update booking
-    const updatedBookings = bookings.map((b) =>
+    const updatedBookings = currentBookings.map((b) =>
       b.id === bookingId ? { ...b, status: 'checked_in' as const, checkInTime: now } : b
     );
 
     // Update room status
-    const updatedRooms = rooms.map((r) =>
+    const updatedRooms = currentRooms.map((r) =>
       r.id === booking.roomId
         ? {
             ...r,
@@ -196,7 +231,7 @@ export function useHotelState() {
     );
 
     const updatedLogs = addLog(
-      logs,
+      currentLogs,
       'CHECK_IN',
       'RECEPTIONIST',
       `Checked in ${booking.guestName} to Room ${booking.roomId} via QR Scan.`,
@@ -208,7 +243,15 @@ export function useHotelState() {
 
   // 3. Receptionist Checks Out Guest
   const checkOutGuest = (bookingId: string) => {
-    const booking = bookings.find((b) => b.id === bookingId);
+    const storedRooms = localStorage.getItem(ROOMS_KEY);
+    const storedBookings = localStorage.getItem(BOOKINGS_KEY);
+    const storedLogs = localStorage.getItem(LOGS_KEY);
+
+    const currentRooms: Room[] = storedRooms ? JSON.parse(storedRooms) : rooms;
+    const currentBookings: Booking[] = storedBookings ? JSON.parse(storedBookings) : bookings;
+    const currentLogs: AuditLog[] = storedLogs ? JSON.parse(storedLogs) : logs;
+
+    const booking = currentBookings.find((b) => b.id === bookingId);
     if (!booking) {
       throw new Error('Invalid QR code: Booking not found.');
     }
@@ -219,12 +262,12 @@ export function useHotelState() {
     const now = new Date().toISOString();
 
     // Update booking
-    const updatedBookings = bookings.map((b) =>
+    const updatedBookings = currentBookings.map((b) =>
       b.id === bookingId ? { ...b, status: 'checked_out' as const, checkOutTime: now } : b
     );
 
     // Reset room
-    const updatedRooms = rooms.map((r) =>
+    const updatedRooms = currentRooms.map((r) =>
       r.id === booking.roomId
         ? {
             ...r,
@@ -240,7 +283,7 @@ export function useHotelState() {
     );
 
     const updatedLogs = addLog(
-      logs,
+      currentLogs,
       'CHECK_OUT',
       'RECEPTIONIST',
       `Checked out ${booking.guestName} from Room ${booking.roomId} via QR Scan.`,
@@ -255,9 +298,17 @@ export function useHotelState() {
     if (rooms.length === 0) return;
 
     const interval = setInterval(() => {
+      const storedRooms = localStorage.getItem(ROOMS_KEY);
+      const storedBookings = localStorage.getItem(BOOKINGS_KEY);
+      const storedLogs = localStorage.getItem(LOGS_KEY);
+
+      const currentRooms: Room[] = storedRooms ? JSON.parse(storedRooms) : rooms;
+      const currentBookings: Booking[] = storedBookings ? JSON.parse(storedBookings) : bookings;
+      const currentLogs: AuditLog[] = storedLogs ? JSON.parse(storedLogs) : logs;
+
       const now = new Date();
       let hasChanges = false;
-      const updatedRooms = rooms.map((room) => {
+      const updatedRooms = currentRooms.map((room) => {
         if (room.status === 'occupied' && room.scheduledCheckOut) {
           const checkoutTime = new Date(room.scheduledCheckOut);
           if (now > checkoutTime) {
@@ -273,21 +324,26 @@ export function useHotelState() {
 
       if (hasChanges) {
         // Find newly overdue rooms to create audit logs
-        let newLogs = [...logs];
+        let newLogs = [...currentLogs];
         updatedRooms.forEach((r) => {
-          const oldRoom = rooms.find((old) => old.id === r.id);
+          const oldRoom = currentRooms.find((old) => old.id === r.id);
           if (oldRoom && oldRoom.status === 'occupied' && r.status === 'overdue') {
-            newLogs = addLog(
-              newLogs,
-              'OVERDUE_FLAGGED',
-              'SYSTEM',
-              `WARNING: Room ${r.id} stay exceeded scheduled checkout (${new Date(r.scheduledCheckOut!).toLocaleTimeString()}). No checkout QR scan received.`,
-              null
-            );
+            const logMsg = `WARNING: Room ${r.id} stay exceeded scheduled checkout (${new Date(r.scheduledCheckOut!).toLocaleTimeString()}). No checkout QR scan received.`;
+            // Check if log already exists to prevent duplicate entries from multiple tabs
+            const logExists = newLogs.some((l) => l.details === logMsg);
+            if (!logExists) {
+              newLogs = addLog(
+                newLogs,
+                'OVERDUE_FLAGGED',
+                'SYSTEM',
+                logMsg,
+                null
+              );
+            }
           }
         });
 
-        saveState(updatedRooms, bookings, newLogs);
+        saveState(updatedRooms, currentBookings, newLogs);
       }
     }, 5000); // Check every 5s
 
