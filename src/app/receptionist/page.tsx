@@ -183,8 +183,8 @@ export default function ReceptionistPage() {
                   {rooms.map((room) => {
                     return (
                       <tr key={room.id} className={styles.tr}>
-                        <td style={{ fontWeight: 'bold', fontSize: '15px' }} className={styles.td}>Room {room.id}</td>
-                        <td className={styles.td}>
+                        <td style={{ fontWeight: 'bold', fontSize: '15px' }} className={styles.td} data-label="Room">Room {room.id}</td>
+                        <td className={styles.td} data-label="Status">
                           <span
                             className={styles.statusTag}
                             style={{
@@ -210,9 +210,9 @@ export default function ReceptionistPage() {
                             {room.status === 'vacant' ? '🟢 Vacant' : room.status === 'occupied' ? '🔴 Occupied' : room.status === 'reserved' ? '🟠 Reserved' : '🟡 Overdue'}
                           </span>
                         </td>
-                        <td className={styles.td}>{room.guestName || '—'}</td>
-                        <td style={{ color: 'var(--text-secondary)' }} className={styles.td}>{room.guestPhone || '—'}</td>
-                        <td style={{ color: room.status === 'overdue' ? 'var(--color-occupied)' : 'var(--text-primary)', fontWeight: room.status === 'overdue' ? 'bold' : '500' }} className={styles.td}>
+                        <td className={styles.td} data-label="Guest">{room.guestName || '—'}</td>
+                        <td style={{ color: 'var(--text-secondary)' }} className={styles.td} data-label="Contact">{room.guestPhone || '—'}</td>
+                        <td style={{ color: room.status === 'overdue' ? 'var(--color-occupied)' : 'var(--text-primary)', fontWeight: room.status === 'overdue' ? 'bold' : '500' }} className={styles.td} data-label="Checkout Limit">
                           {room.scheduledCheckOut ? new Date(room.scheduledCheckOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
                           {room.status === 'overdue' && ' (OVERDUE)'}
                         </td>

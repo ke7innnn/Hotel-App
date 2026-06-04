@@ -367,8 +367,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cameraFrame: {
     position: 'relative',
-    width: '280px',
-    height: '280px',
+    width: '100%',
+    maxWidth: '280px',
+    aspectRatio: '1',
     borderRadius: '16px',
     overflow: 'hidden',
     border: '2px solid var(--border-color)',

@@ -233,3 +233,101 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   border: 1px solid rgba(217, 4, 41, 0.1);
 }
+
+@media (max-width: 500px) {
+  .container {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding-bottom: 12px;
+  }
+
+  .titleSection {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .exitBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .panel {
+    padding: 16px;
+    gap: 12px;
+    border-radius: 16px;
+  }
+
+  .modeTab {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  /* Table responsive conversion to cards */
+  .tableContainer {
+    border: none;
+    background: transparent;
+  }
+
+  .table {
+    display: block;
+    width: 100%;
+  }
+
+  .table thead {
+    display: none; /* Hide standard headers */
+  }
+
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .tr {
+    display: block;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+  }
+
+  .tr:hover {
+    background: var(--bg-secondary);
+  }
+
+  .td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border-color);
+    text-align: right;
+  }
+
+  .td:last-child {
+    border-bottom: none;
+  }
+
+  /* Dynamically retrieve custom data-label attributes */
+  .td::before {
+    content: attr(data-label);
+    font-weight: 800;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    float: left;
+    text-align: left;
+    padding-right: 12px;
+  }
+}
