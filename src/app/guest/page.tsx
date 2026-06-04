@@ -11,7 +11,7 @@ import styles from './guest.module.css';
 const GUEST_BOOKING_SESSION_KEY = 'hotel_pms_guest_booking_id';
 
 export default function GuestPage() {
-  const { rooms, bookings, bookAndPayRoom } = useHotelState();
+  const { rooms, bookings, bookAndPayRoom, checkInGuest, checkOutGuest } = useHotelState();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
@@ -113,6 +113,24 @@ export default function GuestPage() {
     setActiveBookingId(null);
   };
 
+  const handleSimulateCheckIn = () => {
+    if (!activeBookingId) return;
+    try {
+      checkInGuest(activeBookingId);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleSimulateCheckOut = () => {
+    if (!activeBookingId) return;
+    try {
+      checkOutGuest(activeBookingId);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
   const vacantRooms = rooms.filter((r) => r.status === 'vacant');
 
   return (
@@ -203,9 +221,18 @@ export default function GuestPage() {
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                       Show to receptionist on desk. Payment validated.
                     </p>
-                    <div className={styles.qrContainer} id="qr-checkin-pass">
+                    <div 
+                      className={styles.qrContainer} 
+                      id="qr-checkin-pass"
+                      onClick={handleSimulateCheckIn}
+                      style={{ cursor: 'pointer' }}
+                      title="Tap QR to simulate desk scan"
+                    >
                       <QRCodeSVG value={activeBookingId ? `CHECKIN_${activeBookingId}` : ''} size={170} bgColor="#ffffff" fgColor="#121c17" includeMargin={true} />
                     </div>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', cursor: 'pointer' }} onClick={handleSimulateCheckIn}>
+                      💡 Tap QR code to simulate receptionist scan
+                    </span>
                     <div className={styles.badgeCard} style={{ marginTop: '14px' }}>
                       Waiting for Desk Scan
                     </div>
@@ -218,9 +245,18 @@ export default function GuestPage() {
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                       Show to receptionist when leaving. Releases room status.
                     </p>
-                    <div className={styles.qrContainer} id="qr-checkout-pass">
+                    <div 
+                      className={styles.qrContainer} 
+                      id="qr-checkout-pass"
+                      onClick={handleSimulateCheckOut}
+                      style={{ cursor: 'pointer' }}
+                      title="Tap QR to simulate desk scan"
+                    >
                       <QRCodeSVG value={activeBookingId ? `CHECKOUT_${activeBookingId}` : ''} size={170} bgColor="#ffffff" fgColor="#d90429" includeMargin={true} />
                     </div>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', cursor: 'pointer' }} onClick={handleSimulateCheckOut}>
+                      💡 Tap QR code to simulate receptionist scan
+                    </span>
 
                     {/* Stay Timer */}
                     <div className={styles.timer} style={{ width: '100%', marginTop: '14px' }}>
