@@ -1,0 +1,348 @@
+.container {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.phoneViewport {
+  width: 100%;
+  max-width: 440px;
+  background: #f8faf9;
+  border: 1px solid var(--border-color);
+  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+  position: relative;
+}
+
+.header {
+  padding: 24px 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.logoSub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.exitBtn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.exitBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roomGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.roomCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+}
+
+.roomImageContainer {
+  width: 100%;
+  height: 140px;
+  position: relative;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.roomImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.roomCard:hover .roomImage {
+  transform: scale(1.03);
+}
+
+.roomCardSelected {
+  border-color: var(--color-vacant);
+  box-shadow: 0 8px 24px rgba(45, 106, 79, 0.08);
+}
+
+.roomCardDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.roomDetailsContainer {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.roomCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roomNum {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.roomPrice {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-vacant);
+  font-family: var(--font-display);
+}
+
+.roomStatus {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statusVacant {
+  background: var(--color-vacant-glow);
+  color: var(--color-vacant);
+}
+
+.statusOccupied {
+  background: var(--color-occupied-glow);
+  color: var(--color-occupied);
+}
+
+.statusReserved {
+  background: var(--color-reserved-glow);
+  color: var(--color-reserved);
+}
+
+.statusOverdue {
+  background: var(--color-overdue-glow);
+  color: var(--color-overdue);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  font-weight: 500;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--color-vacant);
+}
+
+.durationSelect {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.durationBtn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.durationBtnSelected {
+  background: var(--color-vacant);
+  border-color: var(--color-vacant);
+  color: #fff;
+}
+
+.bookBtn {
+  background: linear-gradient(90deg, var(--color-vacant) 0%, #1b4332 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.15);
+}
+
+.qrContainer {
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  border: 1px solid var(--border-color);
+}
+
+.timer {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timerVal {
+  font-family: monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-overdue);
+}
+
+.badgeCard {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-reserved-glow);
+  color: var(--color-reserved);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.successCard {
+  text-align: center;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.checkAnim {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-vacant-glow);
+  border: 2px solid var(--color-vacant);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-vacant);
+  box-shadow: 0 0 16px rgba(45, 106, 79, 0.1);
+}
+
+.amenitiesRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.amenityIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--bg-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
