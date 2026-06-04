@@ -21,6 +21,20 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError, 
   const checkinSimTargets = activeBookings.filter((b) => b.status === 'paid');
   const checkoutSimTargets = activeBookings.filter((b) => b.status === 'checked_in');
 
+  // Refs to prevent scanner reconstruction when parent state updates
+  const onScanSuccessRef = useRef(onScanSuccess);
+  const onScanErrorRef = useRef(onScanError);
+  const lastScanTimeRef = useRef(0);
+  const lastScanCodeRef = useRef('');
+
+  useEffect(() => {
+    onScanSuccessRef.current = onScanSuccess;
+  }, [onScanSuccess]);
+
+  useEffect(() => {
+    onScanErrorRef.current = onScanError;
+  }, [onScanError]);
+
   useEffect(() => {
     if (!useCamera) {
       if (qrScannerRef.current) {
@@ -53,14 +67,24 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError, 
 
         scanner.render(
           (decodedText) => {
-            onScanSuccess(decodedText);
+            const now = Date.now();
+            // Debounce identical scans within 3 seconds to avoid duplicate triggers
+            if (decodedText === lastScanCodeRef.current && now - lastScanTimeRef.current < 3000) {
+              return;
+            }
+            lastScanTimeRef.current = now;
+            lastScanCodeRef.current = decodedText;
+
+            if (onScanSuccessRef.current) {
+              onScanSuccessRef.current(decodedText);
+            }
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
               navigator.vibrate(200);
             }
           },
           (error) => {
-            if (onScanError) {
-              onScanError(error);
+            if (onScanErrorRef.current) {
+              onScanErrorRef.current(error);
             }
           }
         );
@@ -82,7 +106,7 @@ export default function QrScanner({ activeBookings, onScanSuccess, onScanError, 
         }
       }
     };
-  }, [useCamera, onScanSuccess, onScanError]);
+  }, [useCamera]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
